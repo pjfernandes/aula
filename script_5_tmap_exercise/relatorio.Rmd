@@ -1,0 +1,264 @@
+---
+title: "Miniatlas da Rede Estadual de Educação do RJ"
+author: "Pedro"
+date: "2023-04-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+
+###carregando pacotes
+library(tidyverse)
+library(raster)
+library(tmap)
+library(knitr)
+library(rmarkdown)
+
+###diretório de trabalho
+setwd("C:/Users/pedro/Desktop/dados")
+
+###lendo dados
+df_2009 <- read_csv2("microdados_ed_basica_2009.csv")
+df_2022 <- read_csv2("microdados_ed_basica_2022.csv")
+
+###filtrando dados
+df_escolas_estaduais_RJ_2009 <- df_2009 %>% filter(SG_UF == "RJ", TP_DEPENDENCIA == 2)
+df_escolas_municipais_RJ_2009 <- df_2009 %>% filter(SG_UF == "RJ", TP_DEPENDENCIA == 3)
+
+df_escolas_estaduais_RJ_2022 <- df_2022 %>% filter(SG_UF == "RJ", TP_DEPENDENCIA == 2)
+df_escolas_municipais_RJ_2022 <- df_2022 %>% filter(SG_UF == "RJ", TP_DEPENDENCIA == 3)
+```
+
+## Laboratórios de Informática por município
+```{r, echo=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+
+df_rj_lab_info_2009 <- df_escolas_estaduais_RJ_2009 %>% 
+  dplyr::select(NO_MUNICIPIO, IN_LABORATORIO_INFORMATICA, CO_MUNICIPIO) %>% 
+  group_by(NO_MUNICIPIO, CO_MUNICIPIO) %>% 
+  summarise(sum=sum(IN_LABORATORIO_INFORMATICA, na.rm=T))
+
+df_rj_lab_info_2022 <- df_escolas_estaduais_RJ_2022 %>% 
+  dplyr::select(NO_MUNICIPIO, IN_LABORATORIO_INFORMATICA, CO_MUNICIPIO) %>% 
+  group_by(NO_MUNICIPIO, CO_MUNICIPIO) %>% 
+  summarise(sum=sum(IN_LABORATORIO_INFORMATICA, na.rm=T))
+
+paged_table(data.frame(NOME=df_rj_lab_info_2009$NO_MUNICIPIO, QTDE_2009=df_rj_lab_info_2009$sum, QTDE_2022=df_rj_lab_info_2022$sum))
+
+###carregando shapefile
+shape_rj <- shapefile("RJ_Municipios_2022.shp")
+#shape_rj@data
+
+names(df_rj_lab_info_2009)[2] <- "CD_MUN"
+names(df_rj_lab_info_2009)[3] <- "2009"
+
+names(df_rj_lab_info_2022)[2] <- "CD_MUN"
+names(df_rj_lab_info_2022)[3] <- "2022"
+
+###merge
+tabela_atributos <- merge(x=shape_rj@data, y=df_rj_lab_info_2009, by="CD_MUN")
+tabela_atributos <- merge(x=tabela_atributos, y=df_rj_lab_info_2022, by="CD_MUN")
+shape_rj@data <- tabela_atributos
+
+#calculando porcentagem
+#porc <- (shape_rj@data$sum/sum(shape_rj@data$sum)) * 100
+#shape_rj@data <- cbind(shape_rj@data, porc)
+
+###mapa interativo
+tmap_mode("view")
+tm_shape(shape_rj) + 
+  tm_polygons("2009",
+              palette="Reds",
+              breaks=c(0,2,5,7,9,12,15,20,25),
+              id="2009"
+              )
+
+tmap_mode("view")
+tm_shape(shape_rj) + 
+  tm_polygons("2022",
+              palette="Reds",
+              breaks=c(0,2,5,7,9,12,15,20,25),
+              id="2022"
+              )
+```
+## Laboratórios de Ciências por município
+```{r, echo=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+
+df_rj_lab_ciencias_2009 <- df_escolas_estaduais_RJ_2009 %>% 
+  dplyr::select(NO_MUNICIPIO, IN_LABORATORIO_CIENCIAS, CO_MUNICIPIO) %>% 
+  group_by(NO_MUNICIPIO, CO_MUNICIPIO) %>% 
+  summarise(sum=sum(IN_LABORATORIO_CIENCIAS, na.rm=T))
+
+df_rj_lab_ciencias_2022 <- df_escolas_estaduais_RJ_2022 %>% 
+  dplyr::select(NO_MUNICIPIO, IN_LABORATORIO_CIENCIAS, CO_MUNICIPIO) %>% 
+  group_by(NO_MUNICIPIO, CO_MUNICIPIO) %>% 
+  summarise(sum=sum(IN_LABORATORIO_CIENCIAS, na.rm=T))
+
+paged_table(data.frame(NOME=df_rj_lab_ciencias_2009$NO_MUNICIPIO, QTDE_2009=df_rj_lab_ciencias_2009$sum, QTDE_2022=df_rj_lab_ciencias_2022$sum))
+
+###carregando shapefile
+shape_rj <- shapefile("RJ_Municipios_2022.shp")
+#shape_rj@data
+
+names(df_rj_lab_ciencias_2009)[2] <- "CD_MUN"
+names(df_rj_lab_ciencias_2009)[3] <- "2009"
+
+names(df_rj_lab_ciencias_2022)[2] <- "CD_MUN"
+names(df_rj_lab_ciencias_2022)[3] <- "2022"
+
+###merge
+tabela_atributos <- merge(x=shape_rj@data, y=df_rj_lab_ciencias_2009, by="CD_MUN")
+tabela_atributos <- merge(x=tabela_atributos, y=df_rj_lab_ciencias_2022, by="CD_MUN")
+shape_rj@data <- tabela_atributos
+
+#calculando porcentagem
+#porc <- (shape_rj@data$sum/sum(shape_rj@data$sum)) * 100
+#shape_rj@data <- cbind(shape_rj@data, porc)
+
+###mapa interativo
+tmap_mode("view")
+tm_shape(shape_rj) + 
+  tm_polygons("2009",
+              palette="Greens",
+              breaks=c(0,2,5,7,9,12,15,20,25),
+              id="2009"
+              )
+
+tmap_mode("view")
+tm_shape(shape_rj) + 
+  tm_polygons("2022",
+              palette="Greens",
+              breaks=c(0,2,5,7,9,12,15,20,25),
+              id="2022"
+              )
+```
+
+
+## Escolas municipais ativas
+```{r, echo=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+
+df_rj_ativas_2009_municipais <- df_escolas_municipais_RJ_2009 %>% 
+  dplyr::select(NO_MUNICIPIO, TP_SITUACAO_FUNCIONAMENTO, CO_MUNICIPIO) %>% 
+  filter(TP_SITUACAO_FUNCIONAMENTO==1) %>%
+  group_by(NO_MUNICIPIO, CO_MUNICIPIO) %>% 
+  summarise(sum=sum(TP_SITUACAO_FUNCIONAMENTO, na.rm=T))
+
+df_rj_ativas_2022_municipais <- df_escolas_municipais_RJ_2022 %>% 
+  dplyr::select(NO_MUNICIPIO, TP_SITUACAO_FUNCIONAMENTO, CO_MUNICIPIO) %>% 
+  filter(TP_SITUACAO_FUNCIONAMENTO==1) %>%
+  group_by(NO_MUNICIPIO, CO_MUNICIPIO) %>% 
+  summarise(sum=sum(TP_SITUACAO_FUNCIONAMENTO, na.rm=T))
+
+dif_escolas_ativas_municipais <- df_rj_ativas_2022_municipais$sum - df_rj_ativas_2009_municipais$sum
+
+shape_rj <- shapefile("RJ_Municipios_2022.shp")
+#shape_rj@data
+
+df <- data.frame(NOME=df_rj_ativas_2022_municipais$NO_MUNICIPIO,
+                 CD_MUN=df_rj_ativas_2022_municipais$CO_MUNICIPIO,
+                 Q_2009=df_rj_ativas_2009_municipais$sum,
+                 Q_2022=df_rj_ativas_2022_municipais$sum,
+                 VARIACAO=dif_escolas_ativas_municipais)
+
+paged_table(df)
+
+tabela_atributos <- merge(shape_rj@data, df, by="CD_MUN")
+
+shape_rj@data <- tabela_atributos
+
+tmap_mode("view")
+tm_shape(shape_rj) + 
+  tm_polygons("Q_2009",
+              palette="Blues",
+              breaks=c(0,5,10,15,20,40,60,80,100,120,150,180,200,1500),
+              id="Q_2009"
+              )
+
+tmap_mode("view")
+tm_shape(shape_rj) + 
+  tm_polygons("Q_2022",
+              palette="Blues",
+              breaks=c(0,5,10,15,20,40,60,80,100,120,150,180,200,1500),
+              id="Q_2022"
+              )
+
+tmap_mode("view")
+tm_shape(shape_rj) + 
+  tm_polygons("VARIACAO",
+              palette="RdYlGn",
+              breaks=c(-18,0,203),
+              id="VARIACAO"
+              )
+```
+
+
+
+## Escolas estaduais ativas
+```{r, echo=FALSE}
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+
+df_rj_ativas_2009 <- df_escolas_estaduais_RJ_2009 %>% 
+  dplyr::select(NO_MUNICIPIO, TP_SITUACAO_FUNCIONAMENTO, CO_MUNICIPIO) %>% 
+  filter(TP_SITUACAO_FUNCIONAMENTO==1) %>%
+  group_by(NO_MUNICIPIO, CO_MUNICIPIO) %>% 
+  summarise(sum=sum(TP_SITUACAO_FUNCIONAMENTO, na.rm=T))
+
+df_rj_ativas_2022 <- df_escolas_estaduais_RJ_2022 %>% 
+  dplyr::select(NO_MUNICIPIO, TP_SITUACAO_FUNCIONAMENTO, CO_MUNICIPIO) %>% 
+  filter(TP_SITUACAO_FUNCIONAMENTO==1) %>%
+  group_by(NO_MUNICIPIO, CO_MUNICIPIO) %>% 
+  summarise(sum=sum(TP_SITUACAO_FUNCIONAMENTO, na.rm=T))
+
+dif_escolas_ativas <- df_rj_ativas_2022$sum - df_rj_ativas_2009$sum
+
+shape_rj <- shapefile("RJ_Municipios_2022.shp")
+#shape_rj@data
+
+df <- data.frame(NOME=df_rj_ativas_2022$NO_MUNICIPIO,
+                 CD_MUN=df_rj_ativas_2022$CO_MUNICIPIO,
+                 Q_2009=df_rj_ativas_2009$sum,
+                 Q_2022=df_rj_ativas_2022$sum,
+                 VARIACAO=dif_escolas_ativas)
+
+paged_table(df)
+
+tabela_atributos <- merge(shape_rj@data, df, by="CD_MUN")
+
+shape_rj@data <- tabela_atributos
+
+tmap_mode("view")
+tm_shape(shape_rj) + 
+  tm_polygons("Q_2009",
+              palette="Oranges",
+              breaks=c(0,5,10,15,20,40,60,80,100,120,150,180,200,1500),
+              id="Q_2009"
+              )
+
+tmap_mode("view")
+tm_shape(shape_rj) + 
+  tm_polygons("Q_2022",
+              palette="Oranges",
+              breaks=c(0,5,10,15,20,40,60,80,100,120,150,180,200,1500),
+              id="Q_2022"
+              )
+
+tmap_mode("view")
+tm_shape(shape_rj) + 
+  tm_polygons("VARIACAO",
+              palette="RdYlGn",
+              breaks=c(-140,-16,-10,-5,-1,0,10),
+              id="VARIACAO"
+              )
+
+tmap_mode("view")
+tm_shape(shape_rj) + 
+  tm_polygons("VARIACAO",
+              palette="RdYlGn",
+              breaks=c(-140,0,3),
+              id="VARIACAO"
+              )
+
+```
